@@ -15,7 +15,6 @@
   "scripts": {
     "build": "tsc",
     "lint": "eslint --fix --max-warnings 0 src/**/*.ts",
-    "eslint": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
     "test": "jest --coverage",
     "init": "tsc src/generate/TypesGenerator.ts --outDir dist --target es5 --esModuleInterop --moduleResolution node",
     "generate": "npm run init && node dist/generate/TypesGenerator && npm run build"

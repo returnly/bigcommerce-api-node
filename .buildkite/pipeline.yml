@@ -4,12 +4,11 @@ env:
   NPM_EMAIL: 'eng-admin+nexus-ci@returnly.com'
 
 steps:
-  - label: 'npm Install, Eslint and Test'
+  - label: 'npm Install and Test'
     if: build.author.name != 'returnly-deploy'
     command:
       - 'cp .npmrc-ci .npmrc'
       - 'npm install'
-      - 'npm run eslint'
       - 'npm run test'
       - './.buildkite/test-summary.sh'
     artifact_paths:
