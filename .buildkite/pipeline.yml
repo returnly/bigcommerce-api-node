@@ -79,7 +79,6 @@ steps:
     if: build.branch != pipeline.default_branch
 
   - label: 'npm Publish'
-    if: build.branch != pipeline.default_branch
     command:
       - 'cp .npmrc-ci .npmrc'
       - npm install
