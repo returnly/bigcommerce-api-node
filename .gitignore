@@ -132,3 +132,8 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Common files
+.buildkite/test-summary.sh
+.buildkite/publish-npm-package.sh
+.buildkite/increment-package-version.sh
