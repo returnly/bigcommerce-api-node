@@ -28,7 +28,6 @@ module.exports = {
   plugins: ['prettier'],
   ignorePatterns: ['node_modules', 'dist', 'src/generate/generated'],
   rules: {
-    'no-unsafe-assignment': 'error',
     'array-callback-return': 'error',
     'arrow-parens': ['error', 'as-needed'],
     'dot-notation': 'error',
