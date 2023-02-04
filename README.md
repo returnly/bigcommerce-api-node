@@ -1,6 +1,6 @@
 # Bigcommerce for Node.js
 
-A node module for authentication and communication with the BigCommerce API.
+A node module for authentication and communication with the BigCommerce API
 
 ## Installation (In Development)
 
@@ -12,15 +12,15 @@ Now, you can navigate into the directory of some other package (e.g., [sample-ap
 
 ## Type Generation
 
-The `bigcommerce-api-node` package automatically generates Typescript types from the Open API spec `.yml` files that power our [public API documentation](https://developer.bigcommerce.com/). While making contributions to the `bigcommerce-api-node` package, you may find it necessary to re-generate types from the spec. 
+The `bigcommerce-api-node` package automatically generates Typescript types from the Open API spec `.yml` files that power our [public API documentation](https://developer.bigcommerce.com/). While making contributions to the `bigcommerce-api-node` package, you may find it necessary to re-generate types from the spec.
 
-In order to do so, simply run: 
+In order to do so, simply run:
 
 ```sh
 npm run generate
 ```
 
-This command will: 
+This command will:
 
 1. Run `npm run init` to compile the `TypeGenerator.ts` class
 2. Run `dist/generate/TypeGenerator.js` to generate types
@@ -35,12 +35,13 @@ import BigCommerce from 'bigcommerce-api-node';
 ```
 
 Then, create a BigCommerce object with configuration options relevant to your use case.
+
 ### The BigCommerce Object
 
 The main `BigCommerce` import is an object that contains properties for different use cases of the BigCommerce Node Client. The properties available are described below:
 
-* `Auth`: This class can be instantiated and used to handle the OAuth flow that begins when a merchant clicks **Install** on a single-click app.
-* `Rest`: This class can be instantiated and used to make API requests to the BigCommerce Public REST API.
+- `Auth`: This class can be instantiated and used to handle the OAuth flow that begins when a merchant clicks **Install** on a single-click app.
+- `Rest`: This class can be instantiated and used to make API requests to the BigCommerce Public REST API.
 
 ## OAuth
 
@@ -61,7 +62,7 @@ The `bigcommerceAuth` object created above exposes two public methods: `authoriz
 The `authorize` method takes one parameter — an object containing string values for `code`, `scope`, and `context`, which are provided by the GET request to your store when a merchant installs your app.
 
 ```js
-const payload = await bigcommerceAuth.authorize({code, scope, context});
+const payload = await bigcommerceAuth.authorize({ code, scope, context });
 ```
 
 The object stored in the `payload` variable above will contain the following key/value pairs:
@@ -111,7 +112,7 @@ The `bigcommerce-api-node` package can be used to communicate with the BigCommer
 const bigcommerceRest = new BigCommerce.Rest({
   storeHash: 'yourStoreHash',
   accessToken: 'yourStoreAccessToken',
-})
+});
 
 // bigcommerceRest.<resource_name>.<method_name>
 ```
@@ -134,19 +135,23 @@ for await (const order of bigcommerceRest.v2.orders.listAll()) {
 ```
 
 ## Rate Limiting Management
+
 The `RestClient` class provides information on its status in relation to the BigCommerce API rate limiter. The available information includes:
-* `msToReset`: Time (in milliseconds) until rate limiting window resets
-* `nextWindowTime`: `Date` object for the start of the next rate limiting window
-* `windowSize`: Total size of the current rate limiting window
-* `requestsRemaining`: Number of requests remaining in the current window before rate limiting is enforced
-* `requestsQuota`: Total requests allowed per window
+
+- `msToReset`: Time (in milliseconds) until rate limiting window resets
+- `nextWindowTime`: `Date` object for the start of the next rate limiting window
+- `windowSize`: Total size of the current rate limiting window
+- `requestsRemaining`: Number of requests remaining in the current window before rate limiting is enforced
+- `requestsQuota`: Total requests allowed per window
 
 This information is updated on every request. It can be accessed via the `rateLimitManager` property and used to avoid receiving a `429` error from the server.
+
 ```js
-bigcommerceRest.rateLimitManager.status  // <-- { msToReset, windowSize, requestsRemaining, requestsQuota }
+bigcommerceRest.rateLimitManager.status; // <-- { msToReset, windowSize, requestsRemaining, requestsQuota }
 ```
 
-`RestClient` can be optionally configured to delay requests until the next rate limiting window when a minimum request threshold is met. 
+`RestClient` can be optionally configured to delay requests until the next rate limiting window when a minimum request threshold is met.
+
 ```js
   const bigcommerceRest = new BigCommerce.Rest({
     storeHash: STORE_HASH,
@@ -158,6 +163,7 @@ bigcommerceRest.rateLimitManager.status  // <-- { msToReset, windowSize, request
 ```
 
 Additionally, a custom callback can be provided with optional params object to be run when the request threshold is met.
+
 ```js
   const limitCallback = params => console.log(params.message);
 
@@ -173,45 +179,46 @@ Additionally, a custom callback can be provided with optional params object to b
 ```
 
 ### Available Resources and Methods
-* v2
-  * v2.orders
-    * `get(orderId)`: Get an Order
-    * `update(orderId, data)`: Update an Order
-    * `archive(orderId)`: Archive an Order
-    * `count()`: Get a Count of Orders
-    * `list([params])`: Get All Orders
-    * `listAll([params])`: Get All Orders (Paginated)
-    * `create(data)`: Create an Order
-    * `archiveAll()`: Archive All Orders
-  * v2.orders.orderCoupons
-    * `list(orderId[, params])`: List Order Coupons
-    * `listAll(orderId[, params])`: List Order Coupons (Paginated)
-  * v2.orders.orderProducts
-    * `list(orderId[, params])`: List Order Products
-    * `listAll(orderId[, params])`: List Order Products (Paginated)
-    * `get(orderId, productId)`: Get an Order Product
-  * v2.orders.orderTaxes
-    * `list(orderId[, params])`: Get All Order Taxes
-    * `listAll(orderId[, params])`: Get All Order Taxes (Paginated)
-  * v2.orders.orderStatus
-    * `list()`: Get All Order Statuses
-    * `get(statusId)`: Get a Single Order Status
-  * v2.orders.orderShipments
-    * `list(orderId[, params])`: Get Order Shipments
-    * `listAll(orderId[, params])`: Get Order Shipments (Paginated)
-    * `create(orderId, data)`: Create Order Shipment
-    * `deleteAll(orderId)`: Delete All Order Shipments
-    * `count(orderId)`Get a Count of Order Shipments
-    * `get(orderId, shipmentId)`: Get a Shipment
-    * `update(orderId, shipmentId, data)`: Update a Shipment
-    * `delete(orderId, shipmentId)`: Delete an Order Shipment
-  * v2.orders.orderShippingAddresses
-    * `list(orderId[, params])`: Get Order Shipping Addresses
-    * `listAll(orderId[, params])`: Get Order Shipping Addresses (Paginated)
-    * `get(orderId, addressId)`: Get a Shipping Address
-    * `update(orderId, addressId, data)`: Update a Shipping Address
-  * v2.orders.orderMessages
-    * `list(orderId[, params])`: Get Order Messages
-    * `listAll(orderId[, params])`: Get Order Messages (Paginated)
-  * v2.orders.orderShippingQuotes
-    * `list(orderId, addressId)`: Get Order Shipping Quotes
+
+- v2
+  - v2.orders
+    - `get(orderId)`: Get an Order
+    - `update(orderId, data)`: Update an Order
+    - `archive(orderId)`: Archive an Order
+    - `count()`: Get a Count of Orders
+    - `list([params])`: Get All Orders
+    - `listAll([params])`: Get All Orders (Paginated)
+    - `create(data)`: Create an Order
+    - `archiveAll()`: Archive All Orders
+  - v2.orders.orderCoupons
+    - `list(orderId[, params])`: List Order Coupons
+    - `listAll(orderId[, params])`: List Order Coupons (Paginated)
+  - v2.orders.orderProducts
+    - `list(orderId[, params])`: List Order Products
+    - `listAll(orderId[, params])`: List Order Products (Paginated)
+    - `get(orderId, productId)`: Get an Order Product
+  - v2.orders.orderTaxes
+    - `list(orderId[, params])`: Get All Order Taxes
+    - `listAll(orderId[, params])`: Get All Order Taxes (Paginated)
+  - v2.orders.orderStatus
+    - `list()`: Get All Order Statuses
+    - `get(statusId)`: Get a Single Order Status
+  - v2.orders.orderShipments
+    - `list(orderId[, params])`: Get Order Shipments
+    - `listAll(orderId[, params])`: Get Order Shipments (Paginated)
+    - `create(orderId, data)`: Create Order Shipment
+    - `deleteAll(orderId)`: Delete All Order Shipments
+    - `count(orderId)`Get a Count of Order Shipments
+    - `get(orderId, shipmentId)`: Get a Shipment
+    - `update(orderId, shipmentId, data)`: Update a Shipment
+    - `delete(orderId, shipmentId)`: Delete an Order Shipment
+  - v2.orders.orderShippingAddresses
+    - `list(orderId[, params])`: Get Order Shipping Addresses
+    - `listAll(orderId[, params])`: Get Order Shipping Addresses (Paginated)
+    - `get(orderId, addressId)`: Get a Shipping Address
+    - `update(orderId, addressId, data)`: Update a Shipping Address
+  - v2.orders.orderMessages
+    - `list(orderId[, params])`: Get Order Messages
+    - `listAll(orderId[, params])`: Get Order Messages (Paginated)
+  - v2.orders.orderShippingQuotes
+    - `list(orderId, addressId)`: Get Order Shipping Quotes
