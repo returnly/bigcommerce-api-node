@@ -10,7 +10,6 @@ steps:
       - 'cp .npmrc-ci .npmrc'
       - 'npm install'
       - 'npm run test'
-      - './.buildkite/test-summary.sh'
     artifact_paths:
       - 'coverage/**/*'
     plugins:
