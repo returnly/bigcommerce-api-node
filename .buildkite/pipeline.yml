@@ -1,0 +1,134 @@
+env:
+  NEXUS_HOST: 'http://nexus.returnly.systems:8081/repository/npm-repo-qa/'
+  NPM_USERNAME: 'ci'
+  NPM_EMAIL: 'eng-admin+nexus-ci@returnly.com'
+
+steps:
+  - label: 'npm Install, Eslint and Test'
+    if: build.author.name != 'returnly-deploy'
+    command:
+      - 'cp .npmrc-ci .npmrc'
+      - 'npm install'
+      - 'npm run eslint'
+      - 'npm run test'
+      - './.buildkite/test-summary.sh'
+    artifact_paths:
+      - 'coverage/**/*'
+    plugins:
+      returnly/aws-ssm#v1.0.0:
+        parameters:
+          RETURNLY_MYSQL_DB_USERNAME: /returnly/secrets/dev/rds_mysql/qa_integration_username
+          RETURNLY_MYSQL_DB_PASSWORD: /returnly/secrets/dev/rds_mysql/qa_integration_password
+          RETURNLY_POSTGRES_DB_USERNAME: /returnly/secrets/dev/rds_shared_service/qa_integration_username
+          RETURNLY_POSTGRES_DB_PASSWORD: /returnly/secrets/dev/rds_shared_service/qa_integration_password
+          BUILDKITE_TEST_ANALYTICS_TOKEN: /returnly/secrets/te/buildkite/test-analytics/token
+      docker#v3.5.0:
+        image: 'node:14'
+        propagate-environment: true
+        volumes:
+          - '.:/usr/src/app'
+        environment:
+          - 'BUILDKITE'
+          - 'RETURNLY_MYSQL_DB_USERNAME'
+          - 'RETURNLY_MYSQL_DB_PASSWORD'
+          - 'RETURNLY_POSTGRES_DB_USERNAME'
+          - 'RETURNLY_POSTGRES_DB_PASSWORD'
+          - 'BUILDKITE_TEST_ANALYTICS_TOKEN'
+    timeout_in_minutes: 5
+    retry:
+      manual:
+        permit_on_passed: true
+    agents:
+      queue: 'tests'
+
+  - wait: ~
+    continue_on_failure: false
+
+  - label: 'Increment Package Version'
+    if: build.branch == pipeline.default_branch && build.author.name != 'returnly-deploy'
+    command:
+      - 'cp .npmrc-ci .npmrc'
+      - npm install
+      - './.buildkite/increment-package-version.sh'
+    plugins:
+      - docker#v3.5.0:
+          image: 'node:14'
+          propagate-environment: true
+          mount-ssh-agent: true
+          workdir: /usr/src/app
+          volumes:
+            - '.:/usr/src/app'
+          environment:
+            - 'BUILDKITE'
+    agents:
+      queue: 'deploy'
+
+  - label: 'npm Publish'
+    if: build.branch == pipeline.default_branch && build.author.name == 'returnly-deploy'
+    command:
+      - 'cp .npmrc-ci .npmrc'
+      - npm install
+      - './.buildkite/publish-npm-package.sh'
+    plugins:
+      - returnly/aws-ssm#v1.0.0:
+          parameters:
+            NPM_PASSWORD: /returnly/secrets/common/nexus_repo_password
+      - docker#v3.5.0:
+          image: 'node:14'
+          propagate-environment: true
+          workdir: /usr/src/app
+          volumes:
+            - '.:/usr/src/app'
+          environment:
+            - 'BUILDKITE'
+            - 'NPM_USERNAME'
+            - 'NPM_PASSWORD'
+            - 'NPM_EMAIL'
+            - 'NEXUS_HOST'
+    agents:
+      queue: 'deploy'
+
+  - label: ':spiral_note_pad: README!'
+    if: build.branch == pipeline.default_branch && build.author.name != 'returnly-deploy'
+    command: buildkite-agent annotate "If the package version was updated due to this commit, a new commit by returnly-deploy will be pushed to master and cause the new package to be published." --style 'info' --context 'ctx-info-publish'
+
+  - label: ':spiral_note_pad: README! '
+    if: build.branch != pipeline.default_branch
+    command: buildkite-agent annotate "This branch is not a master branch. Artifacts should not be published to avoid usage of unmerged code." --style 'warning' --context 'ctx-warn'
+
+  - block: 'Force publish non-master branch version'
+    if: build.branch != pipeline.default_branch
+
+  - label: 'npm Publish'
+    if: build.branch != pipeline.default_branch
+    command:
+      - 'cp .npmrc-ci .npmrc'
+      - npm install
+      - './.buildkite/publish-npm-package.sh'
+    plugins:
+      - returnly/aws-ssm#v1.0.0:
+          parameters:
+            NPM_PASSWORD: /returnly/secrets/common/nexus_repo_password
+      - docker#v3.5.0:
+          image: 'node:14'
+          propagate-environment: true
+          workdir: /usr/src/app
+          volumes:
+            - '.:/usr/src/app'
+          environment:
+            - 'BUILDKITE'
+            - 'NPM_USERNAME'
+            - 'NPM_PASSWORD'
+            - 'NPM_EMAIL'
+            - 'NEXUS_HOST'
+    agents:
+      queue: 'deploy'
+
+  - wait: ~
+    continue_on_failure: true
+
+notify:
+  - slack: '#eng-ci-qa'
+    if: build.branch == pipeline.default_branch
+  - slack: '#bot-returnly-te-releases'
+    if: build.author.name == 'returnly-deploy'
