@@ -42,25 +42,6 @@ steps:
   - wait: ~
     continue_on_failure: false
 
-  - label: 'Increment Package Version'
-    if: build.branch == pipeline.default_branch && build.author.name != 'returnly-deploy'
-    command:
-      - 'cp .npmrc-ci .npmrc'
-      - npm install
-      - './.buildkite/increment-package-version.sh'
-    plugins:
-      - docker#v3.5.0:
-          image: 'node:14'
-          propagate-environment: true
-          mount-ssh-agent: true
-          workdir: /usr/src/app
-          volumes:
-            - '.:/usr/src/app'
-          environment:
-            - 'BUILDKITE'
-    agents:
-      queue: 'deploy'
-
   - label: 'npm Publish'
     if: build.branch == pipeline.default_branch && build.author.name == 'returnly-deploy'
     command:
